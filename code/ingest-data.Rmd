@@ -1,0 +1,36 @@
+---
+title: "ingest-data"
+author: "JJayes"
+date: "29/09/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(readxl)
+# library(sf)
+```
+
+
+## Purpose
+
+Ingest data from regional accounts 
+
+```{r}
+import <- read_excel("data/regional-accounts/import.xlsx")
+```
+
+
+## Maps
+
+Read in kommun shapefiles
+
+```{r}
+shp <- sf::st_read("data/kommun shapefiles/Kommun_Sweref99TM_region.shp")
+
+
+x <- readClipboard()
+```
+
