@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
 library(readxl)
+library(scales)
 # library(sf)
 ```
 
@@ -36,8 +37,203 @@ Import
 df <- read_excel("data/regional-accounts/regional-accounts-aggregated.xlsx")
 ```
 
+### What figures?
+
+```{r}
+df %>% 
+    distinct(series)
+```
+
+### Labour force in different sectors
+
+```{r}
+df %>% 
+    filter(series == "Labour force shares in the Swedish counties",
+           lan == "Stockholms län") %>% 
+    ggplot(aes(year, value, fill = subset)) +
+    geom_col()
+```
+
+```{r}
+df %>% 
+    filter(series == "Labour force shares in the Swedish counties",
+           subset == "Agriculture") %>% 
+    ggplot(aes(year, value, color = lan)) +
+    geom_line() +
+    scale_y_continuous(labels = percent_format()) + 
+    scale_color_viridis_d() +
+    theme(legend.position = "none") +
+    labs(y = "Share of labour force in Agriculture",
+         x = NULL)
+
+```
+
+```{r}
+library(ggiraph)
+
+gg <- df %>%
+  filter(
+    series == "Labour force shares in the Swedish counties",
+    subset == "Mining"
+  ) %>%
+  ggplot(aes(year, value, color = lan)) +
+  geom_line_interactive(aes(tooltip = lan, data_id = lan)) +
+  scale_y_continuous(labels = percent_format()) +
+  scale_color_viridis_d() +
+  theme(legend.position = "none") +
+  labs(
+    y = "Share of labour force in Agriculture",
+    x = NULL
+  )
 
 
+x <- girafe(ggobj = gg, width_svg = 8, height_svg = 6,
+  options = list(
+    opts_hover_inv(css = "opacity:0.1;"),
+    opts_hover(css = "stroke-width:2;")
+  ))
+x
+```
+
+### Shares of total labour force by county
+
+maybe geom ridges??
+
+```{r}
+df %>% 
+    filter(series == "Shares of total labour force by county") %>%
+    ggplot(aes(year, value, fill = lan)) +
+    geom_area()
+```
+
+
+### Wages in the Swedish counties (1750-1850, Sweden=1)
+
+```{r}
+df %>% 
+    filter(series == "Wages in the Swedish counties (1750-1850, Sweden=1)") %>%
+    ggplot(aes(year, value, colour = lan)) +
+    geom_line() +
+    facet_wrap(~ subset)
+```
+
+### GDP per capita in the Swedish counties (1750-1850, Sweden=100)
+
+```{r}
+df %>% 
+    filter(series == "GDP per capita in the Swedish counties (1750-1850, Sweden=100)") %>%
+    ggplot(aes(year, value, colour = lan)) +
+    geom_line() +
+    facet_wrap(~ subset)
+
+gg <- df %>%
+  filter(series == "GDP per capita in the Swedish counties (1750-1850, Sweden=100)") %>%
+  ggplot(aes(year, value, color = lan)) +
+  geom_line_interactive(aes(tooltip = lan, data_id = lan)) +
+  scale_y_continuous(labels = number_format()) +
+  scale_color_viridis_d() +
+  theme(legend.position = "none") +
+  labs(
+    y = "GDP per capita (Sweden 1750 = 100)",
+    x = NULL
+  )
+
+
+x <- girafe(
+  ggobj = gg, width_svg = 8, height_svg = 6,
+  options = list(
+    opts_hover_inv(css = "opacity:0.1;"),
+    opts_hover(css = "stroke-width:2;")
+  )
+)
+x
+```
+
+### Shares of total GDP in the Swedish counties
+
+```{r}
+lan_map <- st_read("data/county-shapefiles/maps/sverige-lan-counties-of-sweden.shp") %>% 
+    rename(lan = lan_namn)
+
+s_map <- lan_map %>%
+  mutate( # JavaScript call to open website 
+    onclick = glue::glue(
+'window.open("https://en.wikipedia.org/wiki/{lan}")')
+  ) %>%
+  ggplot() +
+  geom_sf_interactive(
+    aes(data_id = lan, 
+        tooltip = lan,
+        onclick = onclick)
+  ) +
+  theme_void()
+
+# girafe(
+#   ggobj = s_map,
+#   width_svg = 6,
+#   height_svg = 6*0.618
+# )
+```
+
+
+```{r}
+library(cowplot)
+int_fig <- girafe(
+  ggobj = plot_grid(gg, s_map, rel_widths = c(1.2, 1), ncol = 2),
+  width_svg = 5,
+  height_svg = 3,
+  options = list(
+    # opts_tooltip(css = tooltip_css, delay_mouseover = 0, delay_mouseout = 0),
+    opts_hover_inv(css = "opacity:0.1;"),
+    opts_hover(css = "stroke-width:2;")  )
+)
+
+int_fig
+```
+
+### Shares of value added by sector in the Swedish counties, (1750-1850)
+
+```{r}
+df %>% 
+    filter(series == "Shares of value added by sector in the Swedish counties, (1750-1850)",
+           year != 1769) %>% 
+    select(lan, year, subset, value) %>% 
+    pivot_wider(names_from = year, values_from = value, values_fill = 0) %>% 
+    pivot_longer(-c(lan, subset), names_to = "year") %>% 
+    mutate(year = parse_number(year)) %>% 
+    ggplot(aes(year, value, fill = subset)) +
+    geom_area() +
+    facet_wrap(~ lan)
+
+```
+
+
+```{r}
+df %>%
+  filter(
+    series == "Shares of value added by sector in the Swedish counties, (1750-1850)",
+    year != 1769,
+    year == 1800
+  ) %>%
+  select(lan, year, subset, value) %>%
+  pivot_wider(names_from = year, values_from = value, values_fill = 0) %>%
+  pivot_longer(-c(lan, subset), names_to = "year") %>%
+  inner_join(lan_map) %>%
+  ggplot() +
+  geom_sf(aes(geometry = geometry, fill = value)) +
+  facet_wrap(~subset) +
+  scale_fill_gradient2_interactive(
+    low = "blue",
+    high = "red",
+    mid = "pink",
+    midpoint = 0.4,
+    labels = percent_format()
+  ) +
+  theme_void() +
+  theme(legend.position = "bottom") +
+  guides(fill = guide_legend(label.position = "top", label.hjust = 1)) +
+  labs(fill = "Share of value added by sector")
+```
 
 ## Maps
 
@@ -46,5 +242,50 @@ Read in kommun shapefiles
 ```{r}
 shp <- sf::st_read("data/kommun shapefiles/Kommun_Sweref99TM_region.shp")
 
+shp %>% ggplot() +
+  geom_sf()
+
+```
+
+```{r}
+
+library(glue)
+
+year_filter <- 1850
+
+s_map_2 <- lan_map %>%
+  inner_join(df %>% filter(
+    series == "Shares of total GDP in the Swedish counties (1750-1850)",
+    year == year_filter
+  )) %>%
+  mutate( # JavaScript call to open website
+    onclick = glue::glue(
+      'window.open("https://en.wikipedia.org/wiki/{lan}")'
+    )) %>%
+  ggplot() +
+  geom_sf_interactive(
+    aes(
+      fill = value,
+      data_id = lan,
+      tooltip = lan,
+      onclick = onclick
+    )
+  ) +
+  scale_fill_gradient2_interactive(
+    low = "blue",
+    high = "red",
+    mid = "pink",
+    midpoint = 0.05,
+    labels = percent_format()
+  ) +
+  labs(fill = glue("Share of GDP in {year_filter}")) +
+  theme_void()
+
+
+girafe(
+  ggobj = s_map_2,
+  width_svg = 6,
+  height_svg = 6*0.618
+)
 ```
 
