@@ -289,3 +289,47 @@ girafe(
 )
 ```
 
+
+```{r}
+chart_col <- df %>%
+  filter(
+    series == "Shares of total GDP in the Swedish counties (1750-1850)",
+    year == year_filter
+  ) %>%
+  mutate(lan = fct_reorder(lan, value)) %>%
+  ggplot(aes(value, lan, fill = value)) +
+  geom_col_interactive(aes(data_id = lan, tooltip = lan), show.legend = F) +
+  scale_x_continuous(labels = percent_format()) +
+  scale_fill_gradient2_interactive(
+    low = "blue",
+    high = "red",
+    mid = "pink",
+    midpoint = 0.05,
+    labels = percent_format()
+  ) +
+  labs(
+    x = NULL,
+    y = NULL
+  )
+
+girafe(
+  ggobj = chart_col,
+  width_svg = 6,
+  height_svg = 6*0.618
+)
+```
+
+```{r}
+int_fig_2 <- girafe(
+  ggobj = plot_grid(chart_col, s_map_2, rel_widths = c(4, 1), ncol = 2),
+  width_svg = 5,
+  height_svg = 3,
+  options = list(
+    # opts_tooltip(css = tooltip_css, delay_mouseover = 0, delay_mouseout = 0),
+    opts_hover_inv(css = "opacity:0.1;"),
+    opts_hover(css = "stroke-width:2;")  )
+)
+
+int_fig_2
+```
+
