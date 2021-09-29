@@ -19,8 +19,24 @@ library(readxl)
 Ingest data from regional accounts 
 
 ```{r}
-import <- read_excel("data/regional-accounts/import.xlsx")
+df <- read_excel("data/regional-accounts/import.xlsx")
+
+df %>% 
+    pivot_longer(-`GDP`) %>% 
+    relocate(name, .before = `GDP`) %>% 
+    rename(year = name) %>% write.csv("data/regional-accounts/exp.csv")
+
 ```
+
+## Figures
+
+Import
+
+```{r}
+df <- read_excel("data/regional-accounts/regional-accounts-aggregated.xlsx")
+```
+
+
 
 
 ## Maps
@@ -30,7 +46,5 @@ Read in kommun shapefiles
 ```{r}
 shp <- sf::st_read("data/kommun shapefiles/Kommun_Sweref99TM_region.shp")
 
-
-x <- readClipboard()
 ```
 
