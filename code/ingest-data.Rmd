@@ -333,3 +333,50 @@ int_fig_2 <- girafe(
 int_fig_2
 ```
 
+
+### Population and GDP over time
+
+```{r}
+chart_pop_gdp <- df %>% 
+    filter(series %in% c("Population in the Swedish counties", "GDP per capita in the Swedish counties (1750-1850, Sweden=100)")) %>% 
+    select(-subset, -source) %>% 
+    mutate(series = case_when(
+         series == "GDP per capita in the Swedish counties (1750-1850, Sweden=100)" ~ "GDP per capita (Sweden 1750 = 100)",
+         series == "Population in the Swedish counties" ~ "Population"
+    )) %>% 
+    ggplot(aes(year, value, colour = lan)) +
+    geom_line_interactive(aes(tooltip = lan, data_id = lan), show.legend = F) +
+    facet_wrap(~series, scales = "free_y", nrow = 2) +
+    scale_y_continuous(labels = number_format()) +
+    scale_colour_viridis_d_interactive() +
+    labs(x = NULL,
+         y = NULL)
+
+girafe(
+  ggobj = chart_pop_gdp,
+  width_svg = 6,
+  height_svg = 6 * 0.618,
+  options = list(
+    # opts_tooltip(css = tooltip_css, delay_mouseover = 0, delay_mouseout = 0),
+    opts_hover_inv(css = "opacity:0.1;"),
+    opts_hover(css = "stroke-width:2;")
+  )
+)
+```
+
+```{r}
+df %>% 
+    filter(series %in% c("Population in the Swedish counties", "GDP per capita in the Swedish counties (1750-1850, Sweden=100)", "Shares of total GDP in the Swedish counties (1750-1850)")) %>% 
+    select(-subset, -source) %>% 
+    mutate(series = case_when(
+         series == "GDP per capita in the Swedish counties (1750-1850, Sweden=100)" ~ "GDP per capita",
+         series == "Population in the Swedish counties" ~ "Population",
+         series == "Shares of total GDP in the Swedish counties (1750-1850)" ~ "Share of GDP"
+    )) %>% 
+    pivot_wider(names_from = series, values_from = value) %>%
+    mutate(`Share of GDP` = percent(`Share of GDP`, accuracy = .1),
+           Population = format(Population, big.mark = " ")) %>% 
+    arrange(year) %>% 
+    DT::datatable()
+```
+
