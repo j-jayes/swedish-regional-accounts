@@ -8,10 +8,6 @@ output:
     orientation: columns
     vertical_layout: fill
 runtime: shiny
-resource_files:
-- sverige-lan-counties-of-sweden.shx
-- sverige-lan-counties-of-sweden.dbf
-- sverige-lan-counties-of-sweden.prj
 ---
 
 ```{r setup, include=FALSE}
@@ -27,8 +23,8 @@ library(sf)
 theme_set(theme_light())
 
 df <- read_rds("df.rds")
-lan_map <- st_read("sverige-lan-counties-of-sweden.shp") %>%
-    rename(lan = lan_namn)
+lan_map_24 <- read_rds("Sweden-24-counties.rds")
+
 ```
 
 # Share of GDP by county
@@ -52,7 +48,7 @@ Column {data-width=900}
 
 ```{r}
 renderGirafe({
-  s_map_2 <- lan_map %>%
+  s_map_2 <- lan_map_24 %>%
     inner_join(df %>% filter(
       series == "Shares of total GDP in the Swedish counties (1750-1850)",
       year == input$year_c3
@@ -122,7 +118,7 @@ renderGirafe({
 
 ```{r}
 renderGirafe({
-    s_map <- lan_map %>%
+    s_map <- lan_map_24 %>%
     mutate( # JavaScript call to open website
       onclick = glue::glue(
         'window.open("https://en.wikipedia.org/wiki/{lan}")'
@@ -200,7 +196,7 @@ renderGirafe({
     select(lan, year, subset, value) %>%
     pivot_wider(names_from = year, values_from = value, values_fill = 0) %>%
     pivot_longer(-c(lan, subset), names_to = "year") %>%
-    inner_join(lan_map) %>%
+    inner_join(lan_map_24) %>%
     ggplot() +
     geom_sf_interactive(aes(tooltip = lan, geometry = geometry, fill = value)) +
     facet_wrap(~subset) +

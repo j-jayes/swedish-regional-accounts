@@ -380,3 +380,22 @@ df %>%
     DT::datatable()
 ```
 
+
+## New shapefile-map
+
+```{r}
+shp <- st_read("data/kartfiler/ln74_96bj_region.shp")
+lan_names <- read_excel("data/lan_names.xlsx")
+
+shp <- shp %>% 
+    mutate(index = row_number()) %>% 
+    inner_join(lan_names, by = "index")
+
+shp %>% 
+    ggplot() +
+    geom_sf()
+
+shp %>% write_rds("data/kartfiler/Sweden-24-counties.rds")
+
+```
+
