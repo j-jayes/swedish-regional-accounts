@@ -29,6 +29,7 @@ lan_map_24 <- read_rds("Sweden-24-counties.rds")
 
 # Share of GDP by county
 
+
 Column {data-width=300}
 -----------------------------------------------------------------------
 
