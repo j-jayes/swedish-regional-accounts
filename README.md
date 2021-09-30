@@ -14,4 +14,6 @@ I want to practice using the `ggiraph` package.
 
 ## Progress
 
-Ingesting data...
+I've ingested the data from 1750 to 1850, made some exploratory plots and put them up in a flex dashboard.
+
+A beta is available on my [Shinyapps page](https://jonathan-jayes.shinyapps.io/swedish-regional-accounts/).
