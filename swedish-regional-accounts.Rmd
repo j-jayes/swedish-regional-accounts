@@ -41,10 +41,8 @@ sliderInput("year_c3", label = "Year:",
             min = 1750, max = 1850, value = 1750, step = 10)
 ```
 
-
 Column {data-width=900}
 -----------------------------------------------------------------------
-
 
 ```{r}
 renderGirafe({
