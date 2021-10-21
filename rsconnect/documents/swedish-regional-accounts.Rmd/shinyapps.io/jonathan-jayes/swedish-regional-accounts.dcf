@@ -5,9 +5,9 @@ account: jonathan-jayes
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 4761373
-bundleId: 5089285
+bundleId: 5162689
 url: https://jonathan-jayes.shinyapps.io/swedish-regional-accounts/
-when: 1633004953.26077
-lastSyncTime: 1633004953.26077
+when: 1634825613.78232
+lastSyncTime: 1634825613.78232
 asMultiple: FALSE
 asStatic: FALSE
